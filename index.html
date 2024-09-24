@@ -184,7 +184,7 @@
                     // Clear the timeout since the download has completed
                     clearTimeout(timeoutId);
 
-                    if (downloadTime > 3) {
+                    if (downloadTime > 184) {
                         statusElement.textContent = `Download took longer than 3 minutes and 4 seconds (${downloadTime.toFixed(2)} seconds) and was aborted.`;
                         body.style.backgroundColor = 'red';
                         return;
