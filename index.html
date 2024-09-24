@@ -96,6 +96,7 @@
     </style>
     <script>
         let downloadStarted = false;
+        let countdownInterval; // To store the countdown timer reference
 
         // Function to start the countdown automatically
         function startCountdown() {
@@ -111,7 +112,7 @@
 
             // For testing purposes, set the target time to 1 minute from now
             // Comment out the next line for production use
-            targetTime = new Date(pstTime.getTime() + 1 * 60 * 1000);
+            targetTime = new Date(pstTime.getTime() + 1 * 10 * 1000);
 
             // If it's past 11:30 AM PST, set the target to the next day
             if (pstTime >= targetTime) {
@@ -125,6 +126,7 @@
 
                 if (timeDifference <= 0 && !downloadStarted) {
                     downloadStarted = true;
+                    clearInterval(countdownInterval); // Stop the countdown when the time is up
                     // Start the download and measure time
                     startDownloadAndMeasureTime();
                 } else if (timeDifference > 0) {
@@ -140,13 +142,11 @@
 
                     // Display the countdown
                     countdownElement.textContent = hours + ':' + minutes + ':' + seconds;
-
-                    // Update every second
-                    setTimeout(updateCountdown, 1000);
                 }
             }
 
-            updateCountdown();
+            // Update the countdown every second and store the interval
+            countdownInterval = setInterval(updateCountdown, 1000);
         }
 
         function startDownloadAndMeasureTime() {
@@ -171,7 +171,7 @@
 
                     statusElement.textContent = `Downloaded in ${downloadTime.toFixed(2)} seconds`;
 
-                    if (downloadTime > 180) {
+                    if (downloadTime > 184) { // 184 seconds is 3 minutes and 4 seconds
                         body.style.backgroundColor = 'red';
                     } else {
                         body.style.backgroundColor = 'green';
@@ -189,9 +189,54 @@
                 });
         }
 
-        // Start the countdown on page load
+        // Add event listener to "click here" link
         window.onload = function() {
             startCountdown();
+
+            const downloadLink = document.querySelector('.download-link');
+            downloadLink.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link behavior
+                clearInterval(countdownInterval); // Stop the countdown since the user clicked the link
+                downloadStarted = true; // Mark download as started
+
+                const url = 'https://irpd.s3.amazonaws.com/file_23MB.bin';
+                const statusElement = document.getElementById('status');
+                const body = document.body;
+
+                statusElement.textContent = 'Downloading...';
+
+                const startTime = new Date().getTime();
+
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        const endTime = new Date().getTime();
+                        const downloadTime = (endTime - startTime) / 1000;
+
+                        statusElement.textContent = `Downloaded in ${downloadTime.toFixed(2)} seconds`;
+
+                        if (downloadTime > 184) {
+                            body.style.backgroundColor = 'red';
+                        } else {
+                            body.style.backgroundColor = 'green';
+                        }
+
+                        // Create a link to download the file
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = 'file_23MB.bin';
+                        link.click();
+                    })
+                    .catch(error => {
+                        statusElement.textContent = `Error: ${error.message}`;
+                        body.style.backgroundColor = 'red';
+                    });
+            });
         };
     </script>
 </head>
