@@ -108,11 +108,11 @@
             // Convert to PST/PDT time zone
             const pstTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
 
-            let targetTime = new Date(pstTime.getFullYear(), pstTime.getMonth(), pstTime.getDate(), 11, 30, 0);
+            let targetTime = new Date(pstTime.getFullYear(), pstTime.getMonth(), pstTime.getDate(), 12, 40, 0);
 
             // For testing purposes, set the target time to 1 minute from now
             // Comment out the next line for production use
-            targetTime = new Date(pstTime.getTime() + 1 * 30 * 1000);
+            // targetTime = new Date(pstTime.getTime() + 1 * 30 * 1000);
 
             // If it's past 11:30 AM PST, set the target to the next day
             if (pstTime >= targetTime) {
