@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <title>Scheduled Download</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Include jQuery Library -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- CSS Styles -->
     <style>
         /* Global Styles */
@@ -87,15 +85,6 @@
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
         }
-        /* Download Link */
-        .download-link {
-            color: #007aff;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .download-link:hover {
-            text-decoration: underline;
-        }
         /* Decorative Elements */
         .background-shape {
             position: absolute;
@@ -122,121 +111,74 @@
             to   { opacity: 1; }
         }
     </style>
+    <script>
+        // Function to start the countdown automatically
+        function startCountdown() {
+            const countdownElement = document.getElementById('countdown');
+
+            const now = new Date();
+            // Convert to PST/PDT time zone
+            const pstTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+
+            let targetTime = new Date(pstTime.getFullYear(), pstTime.getMonth(), pstTime.getDate(), 11, 29, 0);
+
+            // If it's past 11:30 AM PST, set the target to the next day
+            if (pstTime >= targetTime) {
+                targetTime.setDate(targetTime.getDate() + 1);
+            }
+
+            function updateCountdown() {
+                const now = new Date();
+                const pstTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+                const timeDifference = targetTime - pstTime;
+
+                if (timeDifference <= 0) {
+                    // Redirect to the download page
+                    window.location.href = 'download.php';
+                } else {
+                    // Calculate hours, minutes, and seconds
+                    let hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
+                    let minutes = Math.floor((timeDifference / (1000 * 60)) % 60);
+                    let seconds = Math.floor((timeDifference / 1000) % 60);
+
+                    // Format time values
+                    hours = hours < 10 ? '0' + hours : hours;
+                    minutes = minutes < 10 ? '0' + minutes : minutes;
+                    seconds = seconds < 10 ? '0' + seconds : seconds;
+
+                    // Display the countdown
+                    countdownElement.textContent = hours + ':' + minutes + ':' + seconds;
+
+                    // Update every second
+                    setTimeout(updateCountdown, 1000);
+                }
+            }
+
+            updateCountdown();
+        }
+
+        // Start the countdown on page load
+        window.onload = function() {
+            startCountdown();
+        };
+    </script>
 </head>
 <body>
     <div class="container">
         <div class="download-box">
             <!-- Decorative Background Shape -->
             <div class="background-shape"></div>
-            <!-- Optional Logo -->
-            <!-- <img src="https://yourdomain.com/logo.png" alt="Logo" style="width: 100px; margin-bottom: 20px;"> -->
+            <!-- Heading -->
             <h1>Scheduled Download</h1>
             <!-- Countdown Timer -->
             <div class="countdown" id="countdown">00:00:00</div>
-            <!-- Progress Bar -->
-            <div class="progress-bar" id="progress-container">
-                <div class="progress-bar-inner" id="progress-bar"></div>
-            </div>
-            <!-- Percentage Text -->
-            <div class="percent-text" id="percent-text">0%</div>
-            <!-- Hidden Download Link -->
-            <a href="https://irpd.s3.amazonaws.com/file_23MB.bin" id="hiddenDownloadLink" style="display: none;"></a>
             <!-- Fallback Link -->
-            <p>If your download doesn't start automatically, <a href="https://irpd.s3.amazonaws.com/file_23MB.bin" class="download-link">click here</a>.</p>
+            <p>If your download doesn't start automatically, <a href="download.php" class="download-link">click here</a>.</p>
         </div>
         <!-- Footer -->
         <div class="footer">
             &copy; 2024 IRPD.
         </div>
     </div>
-
-    <!-- JavaScript for Countdown and Progress -->
-    <script>
-        // Variables
-        const countdownElement = document.getElementById('countdown');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
-        const percentText = document.getElementById('percent-text');
-        let percent = 0;
-
-        // Function to Get Current Time in PST/PDT
-        function getPSTTime() {
-            const now = new Date();
-            // Convert to PST/PDT time zone
-            const pstTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
-            return pstTime;
-        }
-
-        // Function to Update Countdown
-        function updateCountdown() {
-            const now = getPSTTime();
-            const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 18, 0);
-
-            // If it's past 10:58 AM PST, set the target to the next day
-            if (now >= targetTime) {
-                targetTime.setDate(targetTime.getDate() + 1);
-            }
-
-            const timeDifference = targetTime - now;
-
-            if (timeDifference <= 0) {
-                countdownElement.textContent = 'Starting Download...';
-                startDownload();
-                // Do not continue the countdown
-            } else {
-                // Calculate hours, minutes, and seconds
-                let hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
-                let minutes = Math.floor((timeDifference / (1000 * 60)) % 60);
-                let seconds = Math.floor((timeDifference / 1000) % 60);
-
-                // Format time values
-                hours = hours < 10 ? '0' + hours : hours;
-                minutes = minutes < 10 ? '0' + minutes : minutes;
-                seconds = seconds < 10 ? '0' + seconds : seconds;
-
-                // Display the countdown
-                countdownElement.textContent = hours + ':' + minutes + ':' + seconds;
-
-                // Continue updating the countdown
-                requestAnimationFrame(updateCountdown);
-            }
-        }
-
-        // Function to Start the Download and Progress Bar
-        function startDownload() {
-            // Hide Countdown
-            countdownElement.style.display = 'none';
-
-            // Show Progress Bar and Percentage Text
-            progressContainer.classList.add('fade-in');
-            percentText.classList.add('fade-in');
-
-            // Reset percent to 0
-            percent = 0;
-
-            // Start Progress Simulation
-            updateProgress();
-        }
-
-        // Function to Update Progress
-        function updateProgress() {
-            percent += 1;
-            if (percent <= 100) {
-                progressBar.style.width = percent + '%';
-                percentText.textContent = percent + '%';
-                setTimeout(updateProgress, 50); // Adjust speed here
-            } else {
-                // Trigger the download using jQuery
-                $(document).ready(function () {
-                    $("a#hiddenDownloadLink").click();
-                });
-            }
-        }
-
-        // Start Countdown on Page Load
-        window.onload = function() {
-            updateCountdown();
-        };
-    </script>
 </body>
 </html>

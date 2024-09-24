@@ -1,26 +1,35 @@
 <?php
-// Path to the file on the server
-$file = 'path/to/file_23MB.bin'; // Update this path accordingly
+// download.php
 
-// Check if the file exists
-if (file_exists($file)) {
-    // Set headers to force download
-    header('Content-Description: File Transfer');
-    header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename="' . basename($file) . '"');
-    header('Expires: 0');
-    header('Cache-Control: must-revalidate');
-    header('Pragma: public');
-    header('Content-Length: ' . filesize($file));
+// URL of the file to download
+$fileUrl = 'https://irpd.s3.amazonaws.com/file_23MB.bin';
 
-    // Clear output buffering
-    ob_clean();
-    flush();
+// Name the file will have when downloaded
+$fileName = 'file_23MB.bin';
 
-    // Read the file
-    readfile($file);
+// Get the file content from the remote URL
+$fileContent = file_get_contents($fileUrl);
+
+// Check if the file was fetched successfully
+if ($fileContent === false) {
+    echo 'Error: Unable to download the file.';
     exit;
-} else {
-    echo 'File not found.';
 }
+
+// Set headers to force the download
+header('Content-Description: File Transfer');
+header('Content-Type: application/octet-stream');
+header('Content-Disposition: attachment; filename="' . basename($fileName) . '"');
+header('Expires: 0');
+header('Cache-Control: must-revalidate');
+header('Pragma: public');
+header('Content-Length: ' . strlen($fileContent));
+
+// Clear output buffering
+ob_clean();
+flush();
+
+// Output the file content
+echo $fileContent;
+exit;
 ?>
