@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Scheduled Download</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Include jQuery Library -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- CSS Styles -->
     <style>
         /* Global Styles */
@@ -38,16 +40,9 @@
         /* Heading */
         h1 {
             font-size: 28px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             color: #007aff;
             position: relative;
-        }
-        /* Subheading */
-        h2 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: #555;
-            font-weight: normal;
         }
         /* Decorative Underline */
         h1::after {
@@ -74,7 +69,8 @@
             overflow: hidden;
             margin-bottom: 15px;
             height: 12px;
-            display: none; /* Initially hidden */
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
         }
         /* Progress Bar Inner */
         .progress-bar-inner {
@@ -86,23 +82,16 @@
         /* Percentage Text */
         .percent-text {
             font-size: 14px;
-            margin-bottom: 10px;
-            color: #555;
-            display: none; /* Initially hidden */
-        }
-        /* Download Speed */
-        .download-speed {
-            font-size: 14px;
             margin-bottom: 20px;
             color: #555;
-            display: none; /* Initially hidden */
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
         }
         /* Download Link */
         .download-link {
             color: #007aff;
             text-decoration: none;
             font-weight: 500;
-            cursor: pointer;
         }
         .download-link:hover {
             text-decoration: underline;
@@ -142,7 +131,6 @@
             <!-- Optional Logo -->
             <!-- <img src="https://yourdomain.com/logo.png" alt="Logo" style="width: 100px; margin-bottom: 20px;"> -->
             <h1>Scheduled Download</h1>
-            <h2>Downloading at 1:00 PM PST</h2> <!-- Adjusted Time -->
             <!-- Countdown Timer -->
             <div class="countdown" id="countdown">00:00:00</div>
             <!-- Progress Bar -->
@@ -151,14 +139,14 @@
             </div>
             <!-- Percentage Text -->
             <div class="percent-text" id="percent-text">0%</div>
-            <!-- Download Speed -->
-            <div class="download-speed" id="download-speed"></div>
+            <!-- Hidden Download Link -->
+            <a href="https://irpd.s3.amazonaws.com/file_23MB.bin" id="hiddenDownloadLink" style="display: none;"></a>
             <!-- Fallback Link -->
-            <p>If your download doesn't start automatically, <a href="#" class="download-link" onclick="manualDownload(); return false;">click here</a>.</p>
+            <p>If your download doesn't start automatically, <a href="https://irpd.s3.amazonaws.com/file_23MB.bin" class="download-link">click here</a>.</p>
         </div>
         <!-- Footer -->
         <div class="footer">
-            &copy; 2023 Your Company Name. All rights reserved.
+            &copy; 2024 IRPD.
         </div>
     </div>
 
@@ -169,114 +157,80 @@
         const progressContainer = document.getElementById('progress-container');
         const progressBar = document.getElementById('progress-bar');
         const percentText = document.getElementById('percent-text');
-        const downloadSpeedElement = document.getElementById('download-speed');
-        const fileUrl = 'https://irpd.s3.amazonaws.com/file_23MB.bin';
-        let downloadStarted = false;
-        let simulatedSpeed = Math.random() * (5 - 1) + 1; // Simulate speed between 1 MB/s and 5 MB/s
+        let percent = 0;
 
-        // Function to Get Current Time in PST
+        // Function to Get Current Time in PST/PDT
         function getPSTTime() {
             const now = new Date();
-            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const pstOffset = -8; // PST is UTC -8
-            const pstTime = new Date(utcTime + (3600000 * pstOffset));
-
-            // Adjust for Daylight Saving Time (PDT)
-            const isDST = isDaylightSaving(pstTime);
-            if (isDST) {
-                pstTime.setHours(pstTime.getHours() + 1);
-            }
+            // Convert to PST/PDT time zone
+            const pstTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
             return pstTime;
-        }
-
-        // Function to Determine if Daylight Saving Time is in Effect
-        function isDaylightSaving(date) {
-            const january = new Date(date.getFullYear(), 0, 1).getTimezoneOffset();
-            const july = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
-            return Math.max(january, july) !== date.getTimezoneOffset();
         }
 
         // Function to Update Countdown
         function updateCountdown() {
-            if (downloadStarted) return; // Prevent countdown if download started manually
-
             const now = getPSTTime();
-            const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0); // Adjusted Time
+            const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 18, 0);
 
-            // If it's past 1 PM PST, set the target to the next day
+            // If it's past 10:58 AM PST, set the target to the next day
             if (now >= targetTime) {
                 targetTime.setDate(targetTime.getDate() + 1);
             }
 
             const timeDifference = targetTime - now;
 
-            // Calculate hours, minutes, and seconds
-            let hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
-            let minutes = Math.floor((timeDifference / (1000 * 60)) % 60);
-            let seconds = Math.floor((timeDifference / 1000) % 60);
-
-            // Format time values
-            hours = hours < 10 ? '0' + hours : hours;
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            seconds = seconds < 10 ? '0' + seconds : seconds;
-
-            // Display the countdown
-            countdownElement.textContent = hours + ':' + minutes + ':' + seconds;
-
-            // If countdown is over, start the download
             if (timeDifference <= 0) {
                 countdownElement.textContent = 'Starting Download...';
                 startDownload();
+                // Do not continue the countdown
             } else {
+                // Calculate hours, minutes, and seconds
+                let hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
+                let minutes = Math.floor((timeDifference / (1000 * 60)) % 60);
+                let seconds = Math.floor((timeDifference / 1000) % 60);
+
+                // Format time values
+                hours = hours < 10 ? '0' + hours : hours;
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                seconds = seconds < 10 ? '0' + seconds : seconds;
+
+                // Display the countdown
+                countdownElement.textContent = hours + ':' + minutes + ':' + seconds;
+
+                // Continue updating the countdown
                 requestAnimationFrame(updateCountdown);
             }
         }
 
         // Function to Start the Download and Progress Bar
         function startDownload() {
-            if (downloadStarted) return; // Prevent multiple downloads
-            downloadStarted = true;
-
             // Hide Countdown
             countdownElement.style.display = 'none';
 
             // Show Progress Bar and Percentage Text
-            progressContainer.style.display = 'block';
-            percentText.style.display = 'block';
-            downloadSpeedElement.style.display = 'block';
-
-            // Optionally add fade-in effect
             progressContainer.classList.add('fade-in');
             percentText.classList.add('fade-in');
-            downloadSpeedElement.classList.add('fade-in');
 
-            // Start Simulated Progress
-            simulateProgress();
+            // Reset percent to 0
+            percent = 0;
+
+            // Start Progress Simulation
+            updateProgress();
         }
 
-        // Function to Start Download Manually
-        function manualDownload() {
-            if (downloadStarted) return; // Prevent multiple downloads
-            countdownElement.textContent = 'Starting Download...';
-            startDownload();
-        }
-
-        // Function to Simulate Progress and Initiate Download
-        function simulateProgress() {
-            let percent = 0;
-            const totalSizeMB = 23; // File size in MB
-            const interval = setInterval(() => {
-                percent += simulatedSpeed / totalSizeMB * 5; // Adjust multiplier for speed
-                if (percent >= 100) {
-                    percent = 100;
-                    clearInterval(interval);
-                    // Initiate the actual download
-                    window.location.href = fileUrl;
-                }
+        // Function to Update Progress
+        function updateProgress() {
+            percent += 1;
+            if (percent <= 100) {
                 progressBar.style.width = percent + '%';
-                percentText.textContent = Math.floor(percent) + '%';
-                downloadSpeedElement.textContent = `Speed: ${simulatedSpeed.toFixed(20)} MB/s`;
-            }, 1000);
+                percentText.textContent = percent + '%';
+                setTimeout(updateProgress, 50); // Adjust speed here
+            } else {
+                // Trigger the download using jQuery
+                $(document).ready(function () {
+                    $("a#hiddenDownloadLink").click();
+                });
+            }
         }
 
         // Start Countdown on Page Load
