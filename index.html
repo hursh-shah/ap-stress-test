@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Scheduled Download</title>
+    <title>Scheduled Download with Speed Test</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- CSS Styles -->
     <style>
@@ -19,7 +19,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             text-align: center;
             padding: 20px;
@@ -30,10 +30,11 @@
             padding: 40px;
             border-radius: 16px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
+            max-width: 800px;
             width: 100%;
             position: relative;
             overflow: hidden;
+            margin-bottom: 20px;
         }
         /* Heading */
         h1 {
@@ -59,39 +60,20 @@
             color: #555;
             margin-bottom: 20px;
         }
-        /* Progress Bar Container */
-        .progress-bar {
+        /* Speed Test Container */
+        .speed-test-container {
             width: 100%;
-            background-color: #e6e6e6;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 15px;
-            height: 12px;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-        /* Progress Bar Inner */
-        .progress-bar-inner {
-            height: 100%;
-            width: 0%;
-            background-color: #007aff;
-            transition: width 0.2s ease-in-out;
-        }
-        /* Percentage Text */
-        .percent-text {
-            font-size: 14px;
-            margin-bottom: 20px;
-            color: #555;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+            height: 500px;
+            margin-top: 20px;
+            /* The speed test is visible before the timer hits zero */
         }
         /* Decorative Elements */
         .background-shape {
             position: absolute;
-            width: 500px;
-            height: 500px;
+            width: 800px;
+            height: 800px;
             background: radial-gradient(circle at center, rgba(0, 122, 255, 0.15), transparent 70%);
-            top: -250px;
+            top: -400px;
             left: 50%;
             transform: translateX(-50%);
             z-index: -1;
@@ -110,6 +92,15 @@
             from { opacity: 0; }
             to   { opacity: 1; }
         }
+        /* Download Link */
+        .download-link {
+            color: #007aff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
     </style>
     <script>
         // Function to start the countdown automatically
@@ -120,12 +111,22 @@
             // Convert to PST/PDT time zone
             const pstTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
 
-            let targetTime = new Date(pstTime.getFullYear(), pstTime.getMonth(), pstTime.getDate(), 11, 29, 0);
+            let targetTime = new Date(pstTime.getFullYear(), pstTime.getMonth(), pstTime.getDate(), 12, 23, 0);
+
+            // For testing purposes, set the target time to 1 minute from now
+            // Comment out the next line for production use
+            // targetTime = new Date(pstTime.getTime() + 1 * 60 * 1000);
 
             // If it's past 11:30 AM PST, set the target to the next day
             if (pstTime >= targetTime) {
                 targetTime.setDate(targetTime.getDate() + 1);
             }
+
+            // Calculate initial time difference in seconds
+            let timeDifferenceInSeconds = Math.ceil((targetTime - pstTime) / 1000);
+
+            // Initialize the speed test iframe with the calculated delay
+            initializeSpeedTest(timeDifferenceInSeconds);
 
             function updateCountdown() {
                 const now = new Date();
@@ -133,8 +134,8 @@
                 const timeDifference = targetTime - pstTime;
 
                 if (timeDifference <= 0) {
-                    // Redirect to the download page
-                    window.location.href = 'download.php';
+                    // Start the download
+                    startDownload();
                 } else {
                     // Calculate hours, minutes, and seconds
                     let hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
@@ -157,6 +158,24 @@
             updateCountdown();
         }
 
+        function startDownload() {
+            // Open the download in a new tab
+            window.open('download.php', '_blank');
+        }
+
+        // Initialize the speed test iframe when the page loads
+        function initializeSpeedTest(delayInSeconds) {
+            const speedTestContainer = document.getElementById('speed-test-container');
+            // Create the iframe and append it to the container
+            var iframe = document.createElement('iframe');
+            iframe.id = 'speedTestIframe';
+            iframe.src = 'https://openspeedtest.com/Get-widget.php?Run=' + delayInSeconds; // Start automatically after delay
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = '0';
+            speedTestContainer.appendChild(iframe);
+        }
+
         // Start the countdown on page load
         window.onload = function() {
             startCountdown();
@@ -172,8 +191,12 @@
             <h1>Scheduled Download</h1>
             <!-- Countdown Timer -->
             <div class="countdown" id="countdown">00:00:00</div>
+            <!-- Speed Test Container -->
+            <div class="speed-test-container" id="speed-test-container">
+                <!-- The speed test iframe will be inserted here when the page loads -->
+            </div>
             <!-- Fallback Link -->
-            <p>If your download doesn't start automatically, <a href="download.php" class="download-link">click here</a>.</p>
+            <p>If your download doesn't start automatically, <a href="download.php" class="download-link" target="_blank">click here</a>.</p>
         </div>
         <!-- Footer -->
         <div class="footer">
