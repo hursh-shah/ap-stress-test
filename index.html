@@ -114,7 +114,7 @@
             // Convert to PST/PDT time zone
             const pstTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
 
-            let targetTime = new Date(pstTime.getFullYear(), pstTime.getMonth(), pstTime.getDate(), 12, 50, 0);
+            let targetTime = new Date(pstTime.getFullYear(), pstTime.getMonth(), pstTime.getDate(), 1, 5 , 0);
 
             // For testing purposes, set the target time to 1 minute from now
             // Comment out the next line for production use
