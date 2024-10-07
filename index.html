@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Scheduled Download with Timer</title>
+    <title>Scheduled Download with Interactive Speed Graph</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- CSS Styles -->
     <style>
         /* Global Styles */
@@ -28,7 +30,7 @@
         /* Download Box */
         .download-box {
             background-color: #ffffff;
-            padding: 60px; /* Increased padding for better spacing */
+            padding: 60px;
             border-radius: 16px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             max-width: 800px;
@@ -39,39 +41,39 @@
         }
         /* Heading */
         h1 {
-            font-size: 72px; /* Increased from 28px */
-            margin-bottom: 40px; /* Increased margin for better spacing */
+            font-size: 72px;
+            margin-bottom: 40px;
             color: #007aff;
             position: relative;
         }
         /* Decorative Underline */
         h1::after {
             content: '';
-            width: 100px; /* Increased width */
-            height: 6px;   /* Increased height */
+            width: 100px;
+            height: 6px;
             background-color: #007aff;
             display: block;
-            margin: 20px auto 0; /* Adjusted margins */
+            margin: 20px auto 0;
             border-radius: 3px;
         }
         /* Countdown Timer */
         .countdown {
-            font-size: 100px; /* Increased from 48px */
+            font-size: 100px;
             font-weight: 700;
             color: #555;
-            margin-bottom: 40px; /* Increased margin */
+            margin-bottom: 40px;
         }
         /* Status Message */
         #status {
-            font-size: 50px; /* Increased from 24px */
+            font-size: 50px;
             font-weight: 600;
-            margin-top: 40px; /* Increased margin */
+            margin-top: 40px;
         }
         /* Decorative Elements */
         .background-shape {
             position: absolute;
-            width: 1000px; /* Increased size */
-            height: 1000px; /* Increased size */
+            width: 1000px;
+            height: 1000px;
             background: radial-gradient(circle at center, rgba(0, 122, 255, 0.15), transparent 70%);
             top: -500px;
             left: 50%;
@@ -80,8 +82,8 @@
         }
         /* Footer */
         .footer {
-            margin-top: 50px; /* Increased margin */
-            font-size: 24px;   /* Increased from 12px */
+            margin-top: 50px;
+            font-size: 24px;
             color: #aaa;
         }
         /* Download Link */
@@ -89,15 +91,27 @@
             color: #007aff;
             text-decoration: none;
             font-weight: 600;
-            font-size: 36px; /* Increased font size */
+            font-size: 36px;
         }
         .download-link:hover {
             text-decoration: underline;
         }
         /* Paragraph Text */
         p {
-            font-size: 36px; /* Increased font size for paragraph */
+            font-size: 36px;
             font-weight: 500;
+        }
+        /* Elapsed Time and Download Speed */
+        .elapsed-time, .download-speed {
+            font-size: 36px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        /* Chart Container */
+        #chart-container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
         }
     </style>
     <script>
@@ -162,36 +176,223 @@
 
             statusElement.textContent = 'Downloading...';
 
+            downloadFileAndTrackProgress(url, statusElement, body);
+        }
+
+        function downloadFileAndTrackProgress(url, statusElement, body) {
+            const elapsedTimeElement = document.getElementById('elapsed-time');
+            const downloadSpeedElement = document.getElementById('download-speed');
+
             const startTime = new Date().getTime();
+            let receivedLength = 0; // total bytes received
+            let previousReceivedLength = 0; // bytes received in the previous interval
+            let contentLength = 0; // total bytes to be received
+            let elapsedTime = 0;
+            let speedMeasurements = []; // Store recent measurements for rolling average
+            let timeStamps = []; // For chart labels
+            let chart; // Chart.js instance
+
+            let speedDataForExport = []; // Store data for exporting
+
+            // Initialize the chart
+            function initializeChart() {
+                const ctx = document.getElementById('speed-chart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [], // Time labels
+                        datasets: [{
+                            label: 'Download Speed (Mbps)',
+                            data: [],
+                            borderColor: 'rgba(0, 122, 255, 1)',
+                            backgroundColor: 'rgba(0, 122, 255, 0.2)',
+                            fill: true,
+                            tension: 0.1,
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                title: {
+                                    display: true,
+                                    text: 'Time (s)'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Speed (Mbps)'
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        plugins: {
+                            tooltip: {
+                                enabled: true,
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Speed: ${context.parsed.y.toFixed(2)} Mbps`;
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Initialize chart
+            initializeChart();
+
+            // Update interval for elapsed time and download speed
+            const updateInterval = 500; // in milliseconds
+            const rollingWindow = 2000; // rolling window in milliseconds
 
             fetch(url)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    return response.blob();
-                })
-                .then(blob => {
-                    const endTime = new Date().getTime();
-                    const downloadTime = (endTime - startTime) / 1000;
 
-                    statusElement.textContent = `Downloaded in ${downloadTime.toFixed(2)} seconds`;
-
-                    if (downloadTime > 184) { // 184 seconds is 3 minutes and 4 seconds
-                        body.style.backgroundColor = 'red';
-                    } else {
-                        body.style.backgroundColor = 'green';
+                    contentLength = +response.headers.get('Content-Length');
+                    if (!contentLength) {
+                        console.log('Content-Length response header unavailable');
+                        contentLength = 23 * 1024 * 1024; // Fallback to 23MB
                     }
 
-                    // Create a link to download the file
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = 'file_23MB.bin';
-                    link.click();
+                    const reader = response.body.getReader();
+
+                    // Read chunks of data
+                    function read() {
+                        return reader.read().then(({done, value}) => {
+                            if (done) {
+                                // Download complete
+                                clearInterval(speedUpdateInterval); // Stop the update interval
+                                const endTime = new Date().getTime();
+                                const downloadTime = (endTime - startTime) / 1000;
+                                statusElement.textContent = `Downloaded in ${downloadTime.toFixed(2)} seconds`;
+
+                                if (downloadTime > 184) { // Adjust as needed
+                                    body.style.backgroundColor = 'red';
+                                } else {
+                                    body.style.backgroundColor = 'green';
+                                }
+
+                                // Create a link to download the file
+                                const blob = new Blob(receivedChunks, {type: 'application/octet-stream'});
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = 'file_23MB.bin';
+                                link.click();
+
+                                // Calculate average download speed
+                                const totalSpeed = speedDataForExport.reduce((sum, data) => sum + parseFloat(data.speed), 0);
+                                const averageSpeed = totalSpeed / speedDataForExport.length;
+
+                                // After download, send data to Google Sheets
+                                sendDataToGoogleSheets(speedDataForExport, averageSpeed);
+
+                                return;
+                            }
+
+                            if (value) {
+                                receivedLength += value.length;
+                                receivedChunks.push(value);
+                            }
+
+                            // Continue reading
+                            return read();
+                        });
+                    }
+
+                    let receivedChunks = []; // Store all chunks
+
+                    // Set up an interval to update the elapsed time and download speed display
+                    const speedUpdateInterval = setInterval(function() {
+                        elapsedTime = (new Date().getTime() - startTime) / 1000;
+                        elapsedTimeElement.textContent = `Elapsed Time: ${elapsedTime.toFixed(2)} s`;
+
+                        // Calculate the bytes received since the last update
+                        const bytesSinceLastUpdate = receivedLength - previousReceivedLength;
+                        previousReceivedLength = receivedLength;
+
+                        // Calculate instantaneous speed in Mbps
+                        const currentSpeedMbps = ((bytesSinceLastUpdate * 8) / (updateInterval / 1000)) / (1024 * 1024);
+
+                        // Store the speed measurement with a timestamp
+                        speedMeasurements.push({ speed: currentSpeedMbps, timestamp: elapsedTime });
+
+                        // Remove measurements older than the rolling window
+                        const cutoffTime = elapsedTime - (rollingWindow / 1000);
+                        speedMeasurements = speedMeasurements.filter(m => m.timestamp >= cutoffTime);
+
+                        // Calculate the average speed over the rolling window
+                        const averageSpeedMbps = speedMeasurements.reduce((sum, m) => sum + m.speed, 0) / speedMeasurements.length;
+
+                        downloadSpeedElement.textContent = `Download Speed: ${averageSpeedMbps.toFixed(2)} Mbps`;
+
+                        // Update the chart
+                        chart.data.labels.push(elapsedTime);
+                        chart.data.datasets[0].data.push(averageSpeedMbps);
+                        chart.update();
+
+                        // Store data for exporting
+                        speedDataForExport.push({ timestamp: elapsedTime.toFixed(2), speed: averageSpeedMbps.toFixed(2) });
+
+                    }, updateInterval);
+
+                    // Start reading the data
+                    return read();
                 })
                 .catch(error => {
                     statusElement.textContent = `Error: ${error.message}`;
                     body.style.backgroundColor = 'red';
+                    clearInterval(speedUpdateInterval); // Stop the update interval
+                });
+        }
+
+        // Function to send data to Google Sheets
+        function sendDataToGoogleSheets(speedData, averageSpeed) {
+            // Get the user's IP address
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(ipData => {
+                    const data = {
+                        ipAddress: ipData.ip,
+                        speedData: speedData,
+                        averageSpeed: averageSpeed.toFixed(2)
+                    };
+
+                    // Replace with your Google Apps Script Web App URL
+                    const scriptURL = 'https://script.google.com/macros/s/AKfycbwZfv_1y_Y1LJm3Hyjky6htVvs8J1wMrZB0Ia0ile2DDfCht_MKo1eCjR4uJWI2yu7p7Q/exec';
+
+                    fetch(scriptURL, {
+                        method: 'POST',
+                        mode: 'no-cors', // 'no-cors' to prevent CORS issues
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => {
+                        // Optionally handle response
+                        console.log('Data sent to Google Sheets');
+                    })
+                    .catch(error => {
+                        console.error('Error sending data to Google Sheets:', error);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching IP address:', error);
                 });
         }
 
@@ -211,37 +412,7 @@
 
                 statusElement.textContent = 'Downloading...';
 
-                const startTime = new Date().getTime();
-
-                fetch(url)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.blob();
-                    })
-                    .then(blob => {
-                        const endTime = new Date().getTime();
-                        const downloadTime = (endTime - startTime) / 1000;
-
-                        statusElement.textContent = `Downloaded in ${downloadTime.toFixed(2)} seconds`;
-
-                        if (downloadTime > 184) {
-                            body.style.backgroundColor = 'red';
-                        } else {
-                            body.style.backgroundColor = 'green';
-                        }
-
-                        // Create a link to download the file
-                        const link = document.createElement('a');
-                        link.href = URL.createObjectURL(blob);
-                        link.download = 'file_23MB.bin';
-                        link.click();
-                    })
-                    .catch(error => {
-                        statusElement.textContent = `Error: ${error.message}`;
-                        body.style.backgroundColor = 'red';
-                    });
+                downloadFileAndTrackProgress(url, statusElement, body);
             });
         };
     </script>
@@ -257,6 +428,14 @@
             <div class="countdown" id="countdown">00:00:00</div>
             <!-- Status Message -->
             <h1 id="status"></h1>
+            <!-- Elapsed Time Display -->
+            <div class="elapsed-time" id="elapsed-time">Elapsed Time: 0.00 s</div>
+            <!-- Download Speed Display -->
+            <div class="download-speed" id="download-speed">Download Speed: 0.00 Mbps</div>
+            <!-- Chart Container -->
+            <div id="chart-container">
+                <canvas id="speed-chart"></canvas>
+            </div>
             <!-- Fallback Link -->
             <p>If your download doesn't start automatically, <a href="https://irpd.s3.amazonaws.com/file_23MB.bin" class="download-link" target="_blank">click here</a>.</p>
         </div>
