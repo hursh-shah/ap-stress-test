@@ -1,119 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Scheduled Download with Interactive Speed Graph</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- Include Chart.js library -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <!-- CSS Styles -->
-        <style>
-            /* Global Styles */
-            body {
-                margin: 0;
-                padding: 0;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                background-color: #f0f4f7;
-                transition: background-color 0.5s ease-in-out;
-                color: #333;
-            }
-            /* Centering Container */
-            .container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-                min-height: 100vh;
-                text-align: center;
-                padding: 20px;
-            }
-            /* Download Box */
-            .download-box {
-                background-color: #ffffff;
-                padding: 60px;
-                border-radius: 16px;
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-                max-width: 800px;
-                width: 100%;
-                position: relative;
-                overflow: hidden;
-                margin-bottom: 20px;
-            }
-            /* Heading */
-            h1 {
-                font-size: 72px;
-                margin-bottom: 40px;
-                color: #007aff;
-                position: relative;
-            }
-            /* Decorative Underline */
-            h1::after {
-                content: '';
-                width: 100px;
-                height: 6px;
-                background-color: #007aff;
-                display: block;
-                margin: 20px auto 0;
-                border-radius: 3px;
-            }
-            /* Countdown Timer */
-            .countdown {
-                font-size: 100px;
-                font-weight: 700;
-                color: #555;
-                margin-bottom: 40px;
-            }
-            /* Status Message */
-            #status {
-                font-size: 50px;
-                font-weight: 600;
-                margin-top: 40px;
-            }
-            /* Decorative Elements */
-            .background-shape {
-                position: absolute;
-                width: 1000px;
-                height: 1000px;
-                background: radial-gradient(circle at center, rgba(0, 122, 255, 0.15), transparent 70%);
-                top: -500px;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: -1;
-            }
-            /* Footer */
-            .footer {
-                margin-top: 50px;
-                font-size: 24px;
-                color: #aaa;
-            }
-            /* Download Link */
-            .download-link {
-                color: #007aff;
-                text-decoration: none;
-                font-weight: 600;
-                font-size: 36px;
-            }
-            .download-link:hover {
-                text-decoration: underline;
-            }
-            /* Paragraph Text */
-            p {
-                font-size: 36px;
-                font-weight: 500;
-            }
-            /* Elapsed Time and Download Speed */
-            .elapsed-time, .download-speed {
-                font-size: 36px;
-                margin-top: 20px;
-                font-weight: 600;
-            }
-            /* Chart Container */
-            #chart-container {
-                margin-top: 20px;
-                width: 100%;
-                max-width: 800px;
-            }
-        </style>
+<head>
+    <meta charset="UTF-8">
+    <title>Scheduled Download with Interactive Speed Graph</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- CSS Styles -->
+    <style>
+        /* Global Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f7;
+            transition: background-color 0.5s ease-in-out;
+            color: #333;
+        }
+        /* Centering Container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        /* Download Box */
+        .download-box {
+            background-color: #ffffff;
+            padding: 60px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        /* Heading */
+        h1 {
+            font-size: 72px;
+            margin-bottom: 40px;
+            color: #007aff;
+            position: relative;
+        }
+        /* Decorative Underline */
+        h1::after {
+            content: '';
+            width: 100px;
+            height: 6px;
+            background-color: #007aff;
+            display: block;
+            margin: 20px auto 0;
+            border-radius: 3px;
+        }
+        /* Countdown Timer */
+        .countdown {
+            font-size: 100px;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 40px;
+        }
+        /* Status Message */
+        #status {
+            font-size: 50px;
+            font-weight: 600;
+            margin-top: 40px;
+        }
+        /* Decorative Elements */
+        .background-shape {
+            position: absolute;
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle at center, rgba(0, 122, 255, 0.15), transparent 70%);
+            top: -500px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+        }
+        /* Footer */
+        .footer {
+            margin-top: 50px;
+            font-size: 24px;
+            color: #aaa;
+        }
+        /* Download Link */
+        .download-link {
+            color: #007aff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 36px;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+        /* Paragraph Text */
+        p {
+            font-size: 36px;
+            font-weight: 500;
+        }
+        /* Elapsed Time and Download Speed */
+        .elapsed-time, .download-speed {
+            font-size: 36px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        /* Chart Container */
+        #chart-container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+    </style>
     <script>
         let downloadStarted = false;
         let countdownInterval; // To store the countdown timer reference
@@ -128,6 +128,7 @@
                     // Re-activate the wake lock if it is released
                     wakeLock.addEventListener('release', () => {
                         console.log('Wake Lock was released');
+                        requestWakeLock(); // Re-request the wake lock if it's released
                     });
                 } else {
                     console.log('Wake Lock API not supported in this browser');
@@ -137,7 +138,7 @@
             }
         }
 
-        // Function to release the wake lock
+        // Function to release the wake lock (if needed)
         function releaseWakeLock() {
             if (wakeLock !== null) {
                 wakeLock.release()
@@ -212,9 +213,6 @@
 
             statusElement.textContent = 'Downloading...';
 
-            // Request Wake Lock
-            requestWakeLock();
-
             downloadFileAndTrackProgress(url, statusElement, body);
         }
 
@@ -228,7 +226,6 @@
             let contentLength = 0; // total bytes to be received
             let elapsedTime = 0;
             let speedMeasurements = []; // Store recent measurements for rolling average
-            let timeStamps = []; // For chart labels
             let chart; // Chart.js instance
 
             let speedDataForExport = []; // Store data for exporting
@@ -340,8 +337,8 @@
                                 // After download, send data to Google Sheets
                                 sendDataToGoogleSheets(speedDataForExport, averageSpeed);
 
-                                // Release Wake Lock
-                                releaseWakeLock();
+                                // Release Wake Lock (optional, if you want to release after download)
+                                // releaseWakeLock();
 
                                 return;
                             }
@@ -400,7 +397,7 @@
                     body.style.backgroundColor = 'red';
                     clearInterval(speedUpdateInterval); // Stop the update interval
                     // Release Wake Lock
-                    releaseWakeLock();
+                    // releaseWakeLock();
                 });
         }
 
@@ -423,7 +420,7 @@
                     };
 
                     // Replace with your Google Apps Script Web App URL
-                    const scriptURL = 'https://script.google.com/macros/s/AKfycbwZfv_1y_Y1LJm3Hyjky6htVvs8J1wMrZB0Ia0ile2DDfCht_MKo1eCjR4uJWI2yu7p7Q/exec';
+                    const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
 
                     fetch(scriptURL, {
                         method: 'POST',
@@ -446,9 +443,11 @@
                 });
         }
 
-
         // Add event listener to "click here" link
         window.onload = function() {
+            // Request Wake Lock as soon as the page loads
+            requestWakeLock();
+
             startCountdown();
 
             const downloadLink = document.querySelector('.download-link');
@@ -465,9 +464,6 @@
                 const body = document.body;
 
                 statusElement.textContent = 'Downloading...';
-
-                // Request Wake Lock
-                requestWakeLock();
 
                 downloadFileAndTrackProgress(url, statusElement, body);
             });
