@@ -1,122 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Scheduled Download with Interactive Speed Graph</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Include Chart.js library -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- CSS Styles -->
-    <style>
-        /* Global Styles */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f0f4f7;
-            transition: background-color 0.5s ease-in-out;
-            color: #333;
-        }
-        /* Centering Container */
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
-        }
-        /* Download Box */
-        .download-box {
-            background-color: #ffffff;
-            padding: 60px;
-            border-radius: 16px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            max-width: 800px;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        /* Heading */
-        h1 {
-            font-size: 72px;
-            margin-bottom: 40px;
-            color: #007aff;
-            position: relative;
-        }
-        /* Decorative Underline */
-        h1::after {
-            content: '';
-            width: 100px;
-            height: 6px;
-            background-color: #007aff;
-            display: block;
-            margin: 20px auto 0;
-            border-radius: 3px;
-        }
-        /* Countdown Timer */
-        .countdown {
-            font-size: 100px;
-            font-weight: 700;
-            color: #555;
-            margin-bottom: 40px;
-        }
-        /* Status Message */
-        #status {
-            font-size: 50px;
-            font-weight: 600;
-            margin-top: 40px;
-        }
-        /* Decorative Elements */
-        .background-shape {
-            position: absolute;
-            width: 1000px;
-            height: 1000px;
-            background: radial-gradient(circle at center, rgba(0, 122, 255, 0.15), transparent 70%);
-            top: -500px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: -1;
-        }
-        /* Footer */
-        .footer {
-            margin-top: 50px;
-            font-size: 24px;
-            color: #aaa;
-        }
-        /* Download Link */
-        .download-link {
-            color: #007aff;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 36px;
-        }
-        .download-link:hover {
-            text-decoration: underline;
-        }
-        /* Paragraph Text */
-        p {
-            font-size: 36px;
-            font-weight: 500;
-        }
-        /* Elapsed Time and Download Speed */
-        .elapsed-time, .download-speed {
-            font-size: 36px;
-            margin-top: 20px;
-            font-weight: 600;
-        }
-        /* Chart Container */
-        #chart-container {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 800px;
-        }
-    </style>
+    <head>
+        <meta charset="UTF-8">
+        <title>Scheduled Download with Interactive Speed Graph</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Include Chart.js library -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- CSS Styles -->
+        <style>
+            /* Global Styles */
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                background-color: #f0f4f7;
+                transition: background-color 0.5s ease-in-out;
+                color: #333;
+            }
+            /* Centering Container */
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                min-height: 100vh;
+                text-align: center;
+                padding: 20px;
+            }
+            /* Download Box */
+            .download-box {
+                background-color: #ffffff;
+                padding: 60px;
+                border-radius: 16px;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+                max-width: 800px;
+                width: 100%;
+                position: relative;
+                overflow: hidden;
+                margin-bottom: 20px;
+            }
+            /* Heading */
+            h1 {
+                font-size: 72px;
+                margin-bottom: 40px;
+                color: #007aff;
+                position: relative;
+            }
+            /* Decorative Underline */
+            h1::after {
+                content: '';
+                width: 100px;
+                height: 6px;
+                background-color: #007aff;
+                display: block;
+                margin: 20px auto 0;
+                border-radius: 3px;
+            }
+            /* Countdown Timer */
+            .countdown {
+                font-size: 100px;
+                font-weight: 700;
+                color: #555;
+                margin-bottom: 40px;
+            }
+            /* Status Message */
+            #status {
+                font-size: 50px;
+                font-weight: 600;
+                margin-top: 40px;
+            }
+            /* Decorative Elements */
+            .background-shape {
+                position: absolute;
+                width: 1000px;
+                height: 1000px;
+                background: radial-gradient(circle at center, rgba(0, 122, 255, 0.15), transparent 70%);
+                top: -500px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: -1;
+            }
+            /* Footer */
+            .footer {
+                margin-top: 50px;
+                font-size: 24px;
+                color: #aaa;
+            }
+            /* Download Link */
+            .download-link {
+                color: #007aff;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 36px;
+            }
+            .download-link:hover {
+                text-decoration: underline;
+            }
+            /* Paragraph Text */
+            p {
+                font-size: 36px;
+                font-weight: 500;
+            }
+            /* Elapsed Time and Download Speed */
+            .elapsed-time, .download-speed {
+                font-size: 36px;
+                margin-top: 20px;
+                font-weight: 600;
+            }
+            /* Chart Container */
+            #chart-container {
+                margin-top: 20px;
+                width: 100%;
+                max-width: 800px;
+            }
+        </style>
     <script>
         let downloadStarted = false;
         let countdownInterval; // To store the countdown timer reference
+        let wakeLock = null;   // For the Wake Lock API
+
+        // Function to request a wake lock
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active');
+                    // Re-activate the wake lock if it is released
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock was released');
+                    });
+                } else {
+                    console.log('Wake Lock API not supported in this browser');
+                }
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+            }
+        }
+
+        // Function to release the wake lock
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release()
+                    .then(() => {
+                        wakeLock = null;
+                        console.log('Wake Lock released');
+                    })
+                    .catch(err => {
+                        console.error('Error releasing Wake Lock:', err);
+                    });
+            }
+        }
 
         // Function to start the countdown automatically
         function startCountdown() {
@@ -134,7 +167,7 @@
             // Comment out the next line for production use
             // targetTime = new Date(pstTime.getTime() + 1 * 30 * 1000);
 
-            // If it's past 11:30 AM PST, set the target to the next day
+            // If it's past 1:10 PM PST, set the target to the next day
             if (pstTime >= targetTime) {
                 targetTime.setDate(targetTime.getDate() + 1);
             }
@@ -170,11 +203,17 @@
         }
 
         function startDownloadAndMeasureTime() {
-            const url = 'https://irpd.s3.amazonaws.com/file_23MB.bin';
+            const urlBase = 'https://irpd.s3.amazonaws.com/file_23MB.bin';
+            const uniqueParam = 't=' + new Date().getTime(); // Prevent caching
+            const url = urlBase + '?' + uniqueParam;
+
             const statusElement = document.getElementById('status');
             const body = document.body;
 
             statusElement.textContent = 'Downloading...';
+
+            // Request Wake Lock
+            requestWakeLock();
 
             downloadFileAndTrackProgress(url, statusElement, body);
         }
@@ -301,6 +340,9 @@
                                 // After download, send data to Google Sheets
                                 sendDataToGoogleSheets(speedDataForExport, averageSpeed);
 
+                                // Release Wake Lock
+                                releaseWakeLock();
+
                                 return;
                             }
 
@@ -357,6 +399,8 @@
                     statusElement.textContent = `Error: ${error.message}`;
                     body.style.backgroundColor = 'red';
                     clearInterval(speedUpdateInterval); // Stop the update interval
+                    // Release Wake Lock
+                    releaseWakeLock();
                 });
         }
 
@@ -366,9 +410,15 @@
             fetch('https://api.ipify.org?format=json')
                 .then(response => response.json())
                 .then(ipData => {
+                    const timestamp = new Date().toISOString();
+                    const ipAddress = ipData.ip;
+                    const downloadTime = speedData[speedData.length - 1].timestamp; // Total download time in seconds
+
+                    // Prepare data to send to Google Sheets
                     const data = {
-                        ipAddress: ipData.ip,
-                        speedData: speedData,
+                        timestamp: timestamp,
+                        ipAddress: ipAddress,
+                        downloadTime: downloadTime,
                         averageSpeed: averageSpeed.toFixed(2)
                     };
 
@@ -377,7 +427,7 @@
 
                     fetch(scriptURL, {
                         method: 'POST',
-                        mode: 'no-cors', // 'no-cors' to prevent CORS issues
+                        mode: 'no-cors',
                         headers: {
                             'Content-Type': 'application/json'
                         },
@@ -396,6 +446,7 @@
                 });
         }
 
+
         // Add event listener to "click here" link
         window.onload = function() {
             startCountdown();
@@ -406,11 +457,17 @@
                 clearInterval(countdownInterval); // Stop the countdown since the user clicked the link
                 downloadStarted = true; // Mark download as started
 
-                const url = 'https://irpd.s3.amazonaws.com/file_23MB.bin';
+                const urlBase = 'https://irpd.s3.amazonaws.com/file_23MB.bin';
+                const uniqueParam = 't=' + new Date().getTime(); // Prevent caching
+                const url = urlBase + '?' + uniqueParam;
+
                 const statusElement = document.getElementById('status');
                 const body = document.body;
 
                 statusElement.textContent = 'Downloading...';
+
+                // Request Wake Lock
+                requestWakeLock();
 
                 downloadFileAndTrackProgress(url, statusElement, body);
             });
@@ -437,7 +494,7 @@
                 <canvas id="speed-chart"></canvas>
             </div>
             <!-- Fallback Link -->
-            <p>If your download doesn't start automatically, <a href="https://irpd.s3.amazonaws.com/file_23MB.bin" class="download-link" target="_blank">click here</a>.</p>
+            <p>If your download doesn't start automatically, <a href="#" class="download-link">click here</a>.</p>
         </div>
         <!-- Footer -->
         <div class="footer">
